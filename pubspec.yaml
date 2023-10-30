@@ -1,0 +1,27 @@
+name: bloc_remote_logger
+description: Extension to the bloc library which allows blocs states, events and errors to be logged remotely.
+version: 0.0.1
+repository: https://github.com/korzonkiee/bloc_remote_logger
+issue_tracker: https://github.com/korzonkiee/bloc_remote_logger/issues
+# TODO: Update homepage
+homepage: none
+# TODO: Update documentation
+documentation: none
+topics: [bloc, state-management, logging, remote-logging]
+
+environment:
+  sdk: ">=2.12.0 <4.0.0"
+
+dependencies:
+  bloc: ^8.1.1
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# TODO: Update screenshot
+screenshots:
+  - description: The bloc remote logger package logo.
+    path: screenshots/logo.png
