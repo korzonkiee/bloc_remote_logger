@@ -1,15 +1,12 @@
 // ignore_for_file: public_member_api_docs, avoid_print
 
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:bloc/bloc.dart';
 import 'package:diff_match_patch/diff_match_patch.dart';
 import 'package:dio/dio.dart';
-import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -78,6 +75,7 @@ class _Repository {
   final String apiKey;
   final DirectoryProvider directoryProvider;
 
+  // ignore: unused_field, cancel_subscriptions
   late final StreamSubscription<_Change> _streamSubscription;
   final StreamController<_Change> _streamController =
       StreamController<_Change>();
@@ -155,6 +153,7 @@ class _Repository {
     });
 
     try {
+      // ignore: inference_failure_on_function_invocation
       final response = await Dio().put(
         'http://localhost:8080/files',
         options: Options(
