@@ -1,34 +1,14 @@
 // ignore_for_file: avoid_print
 
+import 'package:bloc_remote_logger/bloc_remote_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
-  Bloc.observer = const AppBlocObserver();
+  Bloc.observer = RemoteBlocObserver(
+    apiKey: '8c230308080b140155195fc47560a3cb2ef90d62dd354f830b7b798b6c4cfaa9',
+  );
   runApp(const App());
-}
-
-/// {@template app_bloc_observer}
-/// Custom [BlocObserver] that observes all bloc and cubit state changes.
-/// {@endtemplate}
-class AppBlocObserver extends BlocObserver {
-  /// {@macro app_bloc_observer}
-  const AppBlocObserver();
-
-  @override
-  void onChange(BlocBase<dynamic> bloc, Change<dynamic> change) {
-    super.onChange(bloc, change);
-    if (bloc is Cubit) print(change);
-  }
-
-  @override
-  void onTransition(
-    Bloc<dynamic, dynamic> bloc,
-    Transition<dynamic, dynamic> transition,
-  ) {
-    super.onTransition(bloc, transition);
-    print(transition);
-  }
 }
 
 /// {@template app}
