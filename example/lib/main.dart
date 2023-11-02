@@ -1,24 +1,19 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: public_member_api_docs
 
 import 'package:bloc_remote_logger/bloc_remote_logger.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = RemoteBlocObserver(
-    apiKey: '8c230308080b140155195fc47560a3cb2ef90d62dd354f830b7b798b6c4cfaa9',
+    apiKey: '2b6c85d390430dc71e1e16b98dbc214c0a3a5e2014867317ad7e070d54893764',
   );
   runApp(const App());
 }
 
-/// {@template app}
-/// A [StatelessWidget] that:
-/// * uses [bloc](https://pub.dev/packages/bloc) and
-/// [flutter_bloc](https://pub.dev/packages/flutter_bloc)
-/// to manage the state of a counter and the app theme.
-/// {@endtemplate}
 class App extends StatelessWidget {
-  /// {@macro app}
   const App({super.key});
 
   @override
@@ -30,14 +25,7 @@ class App extends StatelessWidget {
   }
 }
 
-/// {@template app_view}
-/// A [StatelessWidget] that:
-/// * reacts to state changes in the [ThemeCubit]
-/// and updates the theme of the [MaterialApp].
-/// * renders the [CounterPage].
-/// {@endtemplate}
 class AppView extends StatelessWidget {
-  /// {@macro app_view}
   const AppView({super.key});
 
   @override
@@ -53,12 +41,7 @@ class AppView extends StatelessWidget {
   }
 }
 
-/// {@template counter_page}
-/// A [StatelessWidget] that:
-/// * provides a [CounterBloc] to the [CounterView].
-/// {@endtemplate}
 class CounterPage extends StatelessWidget {
-  /// {@macro counter_page}
   const CounterPage({super.key});
 
   @override
@@ -70,12 +53,7 @@ class CounterPage extends StatelessWidget {
   }
 }
 
-/// {@template counter_view}
-/// A [StatelessWidget] that:
-/// * demonstrates how to consume and interact with a [CounterBloc].
-/// {@endtemplate}
 class CounterView extends StatelessWidget {
-  /// {@macro counter_view}
   const CounterView({super.key});
 
   @override
@@ -83,7 +61,7 @@ class CounterView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Counter')),
       body: Center(
-        child: BlocBuilder<CounterBloc, int>(
+        child: BlocBuilder<CounterBloc, CounterState>(
           builder: (context, count) {
             return Text(
               '$count',
@@ -122,31 +100,51 @@ class CounterView extends StatelessWidget {
   }
 }
 
-/// Event being processed by [CounterBloc].
 abstract class CounterEvent {}
 
-/// Notifies bloc to increment state.
 class CounterIncrementPressed extends CounterEvent {}
 
-/// Notifies bloc to decrement state.
 class CounterDecrementPressed extends CounterEvent {}
 
-/// {@template counter_bloc}
-/// A simple [Bloc] that manages an `int` as its state.
-/// {@endtemplate}
-class CounterBloc extends Bloc<CounterEvent, int> {
-  /// {@macro counter_bloc}
-  CounterBloc() : super(0) {
-    on<CounterIncrementPressed>((event, emit) => emit(state + 1));
-    on<CounterDecrementPressed>((event, emit) => emit(state - 1));
+abstract class CounterState extends Equatable {}
+
+class CounterStateInitial extends CounterState {
+  @override
+  List<Object?> get props => [];
+}
+
+class CounterStateIncremented extends CounterState {
+  CounterStateIncremented({required this.count});
+
+  final int count;
+
+  @override
+  List<Object?> get props => [count];
+}
+
+class CounterStateDecremented extends CounterState {
+  CounterStateDecremented({required this.count});
+
+  final int count;
+
+  @override
+  List<Object?> get props => [count];
+}
+
+int counter = 0;
+
+class CounterBloc extends Bloc<CounterEvent, CounterState> {
+  CounterBloc() : super(CounterStateInitial()) {
+    on<CounterIncrementPressed>(
+      (event, emit) => emit(CounterStateIncremented(count: counter++)),
+    );
+    on<CounterDecrementPressed>(
+      (event, emit) => emit(CounterStateDecremented(count: counter--)),
+    );
   }
 }
 
-/// {@template brightness_cubit}
-/// A simple [Cubit] that manages the [ThemeData] as its state.
-/// {@endtemplate}
 class ThemeCubit extends Cubit<ThemeData> {
-  /// {@macro brightness_cubit}
   ThemeCubit() : super(_lightTheme);
 
   static final _lightTheme = ThemeData(
@@ -163,7 +161,6 @@ class ThemeCubit extends Cubit<ThemeData> {
     brightness: Brightness.dark,
   );
 
-  /// Toggles the current brightness between light and dark.
   void toggleTheme() {
     emit(state.brightness == Brightness.dark ? _lightTheme : _darkTheme);
   }

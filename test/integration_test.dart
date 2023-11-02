@@ -1,5 +1,7 @@
 // ignore_for_file: cascade_invocations
 
+import 'dart:math';
+
 import 'package:bloc/bloc.dart';
 import 'package:bloc_remote_logger/src/remote_bloc_observer.dart';
 import 'package:equatable/equatable.dart';
@@ -19,25 +21,20 @@ void main() {
 
     tearDownAll(() async {
       /// Wait a few seconds to finish writing to the files.
-      await Future<void>.delayed(const Duration(seconds: 5));
+      await Future<void>.delayed(const Duration(seconds: 20));
     });
 
-    test('CounterBloc 1', () async {
+    test('CounterBloc', () async {
       final bloc = CounterBloc();
 
-      bloc.add(CounterIncrementPressed());
-      bloc.add(CounterIncrementPressed());
-      bloc.add(CounterIncrementPressed());
-
-      await bloc.close();
-    });
-
-    test('CounterBloc 2', () async {
-      final bloc = CounterBloc();
-
-      bloc.add(CounterIncrementPressed());
-      bloc.add(CounterIncrementPressed());
-      bloc.add(CounterIncrementPressed());
+      for (var i = 0; i < 100; i++) {
+        final random = Random().nextInt(1000);
+        if (random % 2 == 0) {
+          bloc.add(CounterIncrementPressed());
+        } else {
+          bloc.add(CounterDecrementPressed());
+        }
+      }
 
       await bloc.close();
     });
