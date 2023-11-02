@@ -21,18 +21,23 @@ void main() {
 
     tearDownAll(() async {
       /// Wait a few seconds to finish writing to the files.
-      await Future<void>.delayed(const Duration(seconds: 20));
+      await Future<void>.delayed(const Duration(seconds: 2));
     });
 
     test('CounterBloc', () async {
       final bloc = CounterBloc();
 
-      for (var i = 0; i < 100; i++) {
+      for (var i = 0; i < 10; i++) {
         final random = Random().nextInt(1000);
         if (random % 2 == 0) {
           bloc.add(CounterIncrementPressed());
         } else {
           bloc.add(CounterDecrementPressed());
+        }
+
+        if (random % 3 == 0) {
+          // ignore: invalid_use_of_protected_member
+          bloc.addError(Exception('Something went wrong'), StackTrace.current);
         }
       }
 

@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, avoid_print
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -58,6 +59,50 @@ class RemoteBlocObserver extends BlocObserver {
 
     _repository.saveChange(c);
   }
+
+  @override
+  void onEvent(Bloc<dynamic, dynamic> bloc, Object? event) {
+    super.onEvent(bloc, event);
+
+    final e = _Event(
+      blocName: bloc.runtimeType.toString(),
+      blocHashCode: bloc.hashCode,
+      timestamp: DateTime.now().toUtc(),
+      event: event,
+    );
+
+    _repository.saveEvent(e);
+  }
+
+  @override
+  void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
+    super.onError(bloc, error, stackTrace);
+
+    final e = _Error(
+      blocName: bloc.runtimeType.toString(),
+      blocHashCode: bloc.hashCode,
+      timestamp: DateTime.now().toUtc(),
+      error: error,
+      stackTrace: stackTrace,
+    );
+
+    _repository.saveError(e);
+  }
+
+  @override
+  void onClose(BlocBase<dynamic> bloc) {
+    super.onClose(bloc);
+
+    final c = _Change(
+      blocName: bloc.runtimeType.toString(),
+      blocHashCode: bloc.hashCode,
+      timestamp: DateTime.now().toUtc(),
+      prevState: bloc.state,
+      nextState: null,
+    );
+
+    _repository.saveChange(c);
+  }
 }
 
 class _Repository {
@@ -68,9 +113,17 @@ class _Repository {
   }) {
     _createSessionMetadata();
 
-    _streamSubscription = _streamController.stream
+    _changesStreamSub = _changesStream.stream
         .asyncMap(_handleChange)
         .listen((change) => print('Change handled $change'));
+
+    _eventsStreamSub = _eventsStream.stream
+        .asyncMap(_handleEvent)
+        .listen((event) => print('Event handled $event'));
+
+    _errorsStreamSub = _errorsStream.stream
+        .asyncMap(_handleError)
+        .listen((error) => print('Error handled $error'));
   }
 
   Future<void> _createSessionMetadata() async {
@@ -91,7 +144,6 @@ class _Repository {
       /// TODO: optimize, store info if it exists in a local variable.
       if (!sessionMetadataFile.existsSync()) {
         final sessionMetadata = SessionMetadata(
-          sessionId: sessionId,
           startDate: DateTime.now(),
         );
         final sessionMetadataJsonString = jsonEncode(sessionMetadata.toJson());
@@ -109,13 +161,27 @@ class _Repository {
   final DirectoryProvider directoryProvider;
 
   // ignore: unused_field, cancel_subscriptions
-  late final StreamSubscription<_Change> _streamSubscription;
-  final StreamController<_Change> _streamController =
-      StreamController<_Change>();
+  late final StreamSubscription<_Change> _changesStreamSub;
+  final StreamController<_Change> _changesStream = StreamController<_Change>();
 
-  /// saveChange
+  // ignore: unused_field, cancel_subscriptions
+  late final StreamSubscription<_Event> _eventsStreamSub;
+  final StreamController<_Event> _eventsStream = StreamController<_Event>();
+
+  // ignore: unused_field, cancel_subscriptions
+  late final StreamSubscription<_Error> _errorsStreamSub;
+  final StreamController<_Error> _errorsStream = StreamController<_Error>();
+
   Future<void> saveChange(_Change change) async {
-    _streamController.add(change);
+    _changesStream.add(change);
+  }
+
+  Future<void> saveEvent(_Event event) async {
+    _eventsStream.add(event);
+  }
+
+  Future<void> saveError(_Error error) async {
+    _errorsStream.add(error);
   }
 
   Future<_Change> _handleChange(_Change change) async {
@@ -127,6 +193,56 @@ class _Repository {
 
     final blocName = change.blocName;
     final blocHashCode = change.blocHashCode;
+
+    /// If prevState is null, then it is means that the bloc has been created.
+    if (change.prevState == null) {
+      final blocMetadataFile = await File(
+        path.join(
+          directory.path,
+          '$apiKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
+        ),
+      ).create(recursive: true);
+
+      final blocMetadata = BlocMetadata(
+        createdDate: change.timestamp,
+        closedDate: null,
+      );
+
+      final blocMetadataJsonString = jsonEncode(blocMetadata.toJson());
+
+      await blocMetadataFile.writeAsString(
+        blocMetadataJsonString,
+        mode: FileMode.write,
+      );
+    }
+
+    /// If nextState is null, then it is means that the bloc has been closed.
+    if (change.nextState == null) {
+      final blocMetadataFile = await File(
+        path.join(
+          directory.path,
+          '$apiKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
+        ),
+      ).create(recursive: true);
+
+      final blocMetadataJsonString = await blocMetadataFile.readAsString();
+      final blocMetadataJson =
+          jsonDecode(blocMetadataJsonString) as Map<String, dynamic>;
+      final blocMetadata = BlocMetadata.fromJson(blocMetadataJson);
+
+      final updatedBlocMetadata = BlocMetadata(
+        createdDate: blocMetadata.createdDate,
+        closedDate: change.timestamp,
+      );
+
+      final updatedBlocMetadataJsonString =
+          jsonEncode(updatedBlocMetadata.toJson());
+
+      await blocMetadataFile.writeAsString(
+        updatedBlocMetadataJsonString,
+        mode: FileMode.write,
+      );
+    }
 
     final file = File(
       path.join(
@@ -147,6 +263,68 @@ class _Repository {
     );
 
     return change;
+  }
+
+  Future<_Event> _handleEvent(_Event event) async {
+    final directory = await directoryProvider();
+    if (!directory.existsSync()) {
+      await directory.create(recursive: true);
+    }
+
+    final blocName = event.blocName;
+    final blocHashCode = event.blocHashCode;
+
+    final file = File(
+      path.join(
+        directory.path,
+        '$apiKey/$sessionId/$blocName/$blocHashCode/events.csv',
+      ),
+    );
+
+    // ignore: avoid_slow_async_io
+    if (!(await file.exists())) {
+      await file.create(recursive: true);
+    }
+
+    /// Keep the file open for writing.
+    /// TODO: optimize, don't write to file every time.
+    await file.writeAsString(
+      '${event.toCSV()}\n',
+      mode: FileMode.append,
+    );
+
+    return event;
+  }
+
+  Future<_Error> _handleError(_Error error) async {
+    final directory = await directoryProvider();
+    if (!directory.existsSync()) {
+      await directory.create(recursive: true);
+    }
+
+    final blocName = error.blocName;
+    final blocHashCode = error.blocHashCode;
+
+    final file = File(
+      path.join(
+        directory.path,
+        '$apiKey/$sessionId/$blocName/$blocHashCode/errors.csv',
+      ),
+    );
+
+    // ignore: avoid_slow_async_io
+    if (!(await file.exists())) {
+      await file.create(recursive: true);
+    }
+
+    /// Keep the file open for writing.
+    /// TODO: optimize, don't write to file every time.
+    await file.writeAsString(
+      '${error.toCSV()}\n',
+      mode: FileMode.append,
+    );
+
+    return error;
   }
 
   Future<void> uploadPreviousSessions() async {
@@ -262,6 +440,87 @@ class _Change {
   }
 }
 
+class _Event {
+  _Event({
+    required this.blocName,
+    required this.blocHashCode,
+    required this.timestamp,
+    required this.event,
+  });
+
+  final String blocName;
+  final int blocHashCode;
+  final DateTime timestamp;
+  final dynamic event;
+
+  String toCSV() {
+    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final content = base64.encode(utf8.encode(event.toString()));
+
+    return [
+      timestamp,
+      content,
+    ].join(',');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'blocName': blocName,
+      'blocHashCode': blocHashCode,
+      'timestamp': timestamp.toIso8601String(),
+      'event': event.toString(),
+    };
+  }
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+}
+
+class _Error {
+  _Error({
+    required this.blocName,
+    required this.blocHashCode,
+    required this.timestamp,
+    required this.error,
+    required this.stackTrace,
+  });
+
+  final String blocName;
+  final int blocHashCode;
+  final DateTime timestamp;
+  final dynamic error;
+  final StackTrace stackTrace;
+
+  String toCSV() {
+    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final errorContent = base64.encode(utf8.encode(error.toString()));
+    final errorStackTrace = base64.encode(utf8.encode(stackTrace.toString()));
+
+    return [
+      timestamp,
+      errorContent,
+      errorStackTrace,
+    ].join(',');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'blocName': blocName,
+      'blocHashCode': blocHashCode,
+      'timestamp': timestamp.toIso8601String(),
+      'error': error.toString(),
+      'stackTrace': stackTrace.toString(),
+    };
+  }
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+}
+
 typedef DirectoryProvider = Future<Directory> Function();
 
 /// TODO: optimize, don't create directory every time.
@@ -283,24 +542,44 @@ DirectoryProvider testDirectoryProvider = () async {
 
 class SessionMetadata {
   SessionMetadata({
-    required this.sessionId,
     required this.startDate,
   });
 
   factory SessionMetadata.fromJson(Map<String, dynamic> json) {
     return SessionMetadata(
-      sessionId: json['sessionId'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
     );
   }
 
-  final String sessionId;
   final DateTime startDate;
 
   Map<String, dynamic> toJson() {
     return {
-      'sessionId': sessionId,
       'startDate': startDate.toIso8601String(),
+    };
+  }
+}
+
+class BlocMetadata {
+  BlocMetadata({
+    required this.createdDate,
+    required this.closedDate,
+  });
+
+  factory BlocMetadata.fromJson(Map<String, dynamic> json) {
+    return BlocMetadata(
+      createdDate: DateTime.tryParse(json['createdDate'] as String),
+      closedDate: DateTime.tryParse(json['closedDate'] as String),
+    );
+  }
+
+  final DateTime? createdDate;
+  final DateTime? closedDate;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'createdDate': createdDate?.toIso8601String() ?? '',
+      'closedDate': closedDate?.toIso8601String() ?? '',
     };
   }
 }
