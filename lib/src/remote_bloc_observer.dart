@@ -119,6 +119,7 @@ class _Repository {
   }
 
   Future<_Change> _handleChange(_Change change) async {
+    /// TODO: optimize, store in local variable.
     final directory = await directoryProvider();
     if (!directory.existsSync()) {
       await directory.create(recursive: true);
@@ -130,7 +131,7 @@ class _Repository {
     final file = File(
       path.join(
         directory.path,
-        '$apiKey/$sessionId/$blocName/$blocHashCode/state.txt',
+        '$apiKey/$sessionId/$blocName/$blocHashCode/state.csv',
       ),
     );
 
@@ -141,7 +142,7 @@ class _Repository {
 
     /// Keep the file open for writing.
     await file.writeAsString(
-      change.diff(),
+      '${change.toCSV()}\n',
       mode: FileMode.append,
     );
 
@@ -225,6 +226,16 @@ class _Change {
   final DateTime timestamp;
   final dynamic prevState;
   final dynamic nextState;
+
+  String toCSV() {
+    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final contentChange = base64.encode(utf8.encode(diff()));
+
+    return [
+      timestamp,
+      contentChange,
+    ].join(',');
+  }
 
   String diff() {
     return patchToText(
