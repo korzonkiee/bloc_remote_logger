@@ -66,9 +66,42 @@ class _Repository {
     required this.apiKey,
     required this.directoryProvider,
   }) {
+    _createSessionMetadata();
+
     _streamSubscription = _streamController.stream
         .asyncMap(_handleChange)
         .listen((change) => print('Change handled $change'));
+  }
+
+  Future<void> _createSessionMetadata() async {
+    try {
+      /// TODO: optimize, store in local variable.
+      final directory = await directoryProvider();
+      if (!directory.existsSync()) {
+        await directory.create(recursive: true);
+      }
+
+      final sessionMetadataFile = File(
+        path.join(
+          directory.path,
+          '$apiKey/$sessionId/sessionMetadata.json',
+        ),
+      );
+
+      /// TODO: optimize, store info if it exists in a local variable.
+      if (!sessionMetadataFile.existsSync()) {
+        final sessionMetadata = SessionMetadata(
+          sessionId: sessionId,
+          startDate: DateTime.now(),
+        );
+        final sessionMetadataJsonString = jsonEncode(sessionMetadata.toJson());
+
+        await sessionMetadataFile.create(recursive: true);
+        await sessionMetadataFile.writeAsString(sessionMetadataJsonString);
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 
   final String sessionId;
@@ -236,3 +269,27 @@ DirectoryProvider testDirectoryProvider = () async {
   return Directory('${currentDirectory.path}/test/temp')
       .create(recursive: true);
 };
+
+class SessionMetadata {
+  SessionMetadata({
+    required this.sessionId,
+    required this.startDate,
+  });
+
+  factory SessionMetadata.fromJson(Map<String, dynamic> json) {
+    return SessionMetadata(
+      sessionId: json['sessionId'] as String,
+      startDate: DateTime.parse(json['startDate'] as String),
+    );
+  }
+
+  final String sessionId;
+  final DateTime startDate;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sessionId': sessionId,
+      'startDate': startDate.toIso8601String(),
+    };
+  }
+}
