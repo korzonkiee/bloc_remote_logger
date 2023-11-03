@@ -17,12 +17,14 @@ import 'package:uuid/uuid.dart';
 class RemoteBlocObserver extends BlocObserver {
   RemoteBlocObserver({
     required String apiKey,
+    String baseUrl = 'http://localhost:8080',
     DirectoryProvider? directoryProvider,
   }) {
     _repository = _Repository(
       sessionId: const Uuid().v4(),
       apiKey: apiKey,
       directoryProvider: directoryProvider ?? defaultDirectoryProvider,
+      baseUrl: baseUrl,
     );
 
     _repository.uploadPreviousSessions();
@@ -110,6 +112,7 @@ class _Repository {
     required this.sessionId,
     required this.apiKey,
     required this.directoryProvider,
+    required this.baseUrl,
   }) {
     _createSessionMetadata();
 
@@ -144,7 +147,7 @@ class _Repository {
       /// TODO: optimize, store info if it exists in a local variable.
       if (!sessionMetadataFile.existsSync()) {
         final sessionMetadata = SessionMetadata(
-          startDate: DateTime.now(),
+          startedDate: DateTime.now(),
         );
         final sessionMetadataJsonString = jsonEncode(sessionMetadata.toJson());
 
@@ -159,6 +162,7 @@ class _Repository {
   final String sessionId;
   final String apiKey;
   final DirectoryProvider directoryProvider;
+  final String baseUrl;
 
   // ignore: unused_field, cancel_subscriptions
   late final StreamSubscription<_Change> _changesStreamSub;
@@ -247,7 +251,7 @@ class _Repository {
     final file = File(
       path.join(
         directory.path,
-        '$apiKey/$sessionId/$blocName/$blocHashCode/state.csv',
+        '$apiKey/$sessionId/$blocName/$blocHashCode/states.csv',
       ),
     );
 
@@ -367,7 +371,7 @@ class _Repository {
     try {
       // ignore: inference_failure_on_function_invocation
       final response = await Dio().put(
-        'http://localhost:8080/files',
+        '$baseUrl/files',
         options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -406,7 +410,7 @@ class _Change {
   final dynamic nextState;
 
   String toCSV() {
-    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final timestamp = this.timestamp.toUtc().toIso8601String();
     final contentChange = base64.encode(utf8.encode(diff()));
 
     return [
@@ -454,7 +458,7 @@ class _Event {
   final dynamic event;
 
   String toCSV() {
-    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final timestamp = this.timestamp.toUtc().toIso8601String();
     final content = base64.encode(utf8.encode(event.toString()));
 
     return [
@@ -494,7 +498,7 @@ class _Error {
   final StackTrace stackTrace;
 
   String toCSV() {
-    final timestamp = this.timestamp.millisecondsSinceEpoch;
+    final timestamp = this.timestamp.toUtc().toIso8601String();
     final errorContent = base64.encode(utf8.encode(error.toString()));
     final errorStackTrace = base64.encode(utf8.encode(stackTrace.toString()));
 
@@ -542,20 +546,20 @@ DirectoryProvider testDirectoryProvider = () async {
 
 class SessionMetadata {
   SessionMetadata({
-    required this.startDate,
+    required this.startedDate,
   });
 
   factory SessionMetadata.fromJson(Map<String, dynamic> json) {
     return SessionMetadata(
-      startDate: DateTime.parse(json['startDate'] as String),
+      startedDate: DateTime.parse(json['startedDate'] as String),
     );
   }
 
-  final DateTime startDate;
+  final DateTime startedDate;
 
   Map<String, dynamic> toJson() {
     return {
-      'startDate': startDate.toIso8601String(),
+      'startedDate': startedDate.toUtc().toIso8601String(),
     };
   }
 }
@@ -578,8 +582,8 @@ class BlocMetadata {
 
   Map<String, dynamic> toJson() {
     return {
-      'createdDate': createdDate?.toIso8601String() ?? '',
-      'closedDate': closedDate?.toIso8601String() ?? '',
+      'createdDate': createdDate?.toUtc().toIso8601String() ?? '',
+      'closedDate': closedDate?.toUtc().toIso8601String() ?? '',
     };
   }
 }

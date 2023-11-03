@@ -14,7 +14,7 @@ void main() {
       await tempDirectory.create();
 
       Bloc.observer = RemoteBlocObserver(
-        apiKey: 'test-api-key',
+        apiKey: 'test-api-key-3',
         directoryProvider: testDirectoryProvider,
       );
     });
@@ -42,6 +42,24 @@ void main() {
       }
 
       await bloc.close();
+
+      final bloc2 = CounterBloc();
+
+      for (var i = 0; i < 10; i++) {
+        final random = Random().nextInt(1000);
+        if (random % 2 == 0) {
+          bloc2.add(CounterIncrementPressed());
+        } else {
+          bloc2.add(CounterDecrementPressed());
+        }
+
+        if (random % 3 == 0) {
+          // ignore: invalid_use_of_protected_member
+          bloc2.addError(Exception('Something went wrong'), StackTrace.current);
+        }
+      }
+
+      await bloc2.close();
     });
   });
 }

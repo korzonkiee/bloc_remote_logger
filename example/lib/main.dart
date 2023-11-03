@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = RemoteBlocObserver(
-    apiKey: '2b6c85d390430dc71e1e16b98dbc214c0a3a5e2014867317ad7e070d54893764',
+    apiKey: '922984c51f13322af2c6e0316fc47c94987c8db509dfcc0663b11812fa3e8c59',
   );
   runApp(const App());
 }
@@ -62,9 +62,9 @@ class CounterView extends StatelessWidget {
       appBar: AppBar(title: const Text('Counter')),
       body: Center(
         child: BlocBuilder<CounterBloc, CounterState>(
-          builder: (context, count) {
+          builder: (context, state) {
             return Text(
-              '$count',
+              '${state.counter}',
               style: Theme.of(context).textTheme.displayLarge,
             );
           },
@@ -106,40 +106,26 @@ class CounterIncrementPressed extends CounterEvent {}
 
 class CounterDecrementPressed extends CounterEvent {}
 
-abstract class CounterState extends Equatable {}
+class CounterState extends Equatable {
+  const CounterState({this.counter = 0});
 
-class CounterStateInitial extends CounterState {
-  @override
-  List<Object?> get props => [];
-}
+  final int counter;
 
-class CounterStateIncremented extends CounterState {
-  CounterStateIncremented({required this.count});
-
-  final int count;
+  CounterState copyWith({int? counter}) {
+    return CounterState(counter: counter ?? this.counter);
+  }
 
   @override
-  List<Object?> get props => [count];
+  List<Object?> get props => [counter];
 }
-
-class CounterStateDecremented extends CounterState {
-  CounterStateDecremented({required this.count});
-
-  final int count;
-
-  @override
-  List<Object?> get props => [count];
-}
-
-int counter = 0;
 
 class CounterBloc extends Bloc<CounterEvent, CounterState> {
-  CounterBloc() : super(CounterStateInitial()) {
+  CounterBloc() : super(const CounterState()) {
     on<CounterIncrementPressed>(
-      (event, emit) => emit(CounterStateIncremented(count: counter++)),
+      (event, emit) => emit(state.copyWith(counter: state.counter + 1)),
     );
     on<CounterDecrementPressed>(
-      (event, emit) => emit(CounterStateDecremented(count: counter--)),
+      (event, emit) => emit(state.copyWith(counter: state.counter - 1)),
     );
   }
 }
