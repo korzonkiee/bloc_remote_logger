@@ -14,7 +14,7 @@ void main() {
       await tempDirectory.create();
 
       Bloc.observer = RemoteBlocObserver(
-        apiKey: 'api-key',
+        projectKey: 'api-key',
         directoryProvider: testDirectoryProvider,
       );
     });

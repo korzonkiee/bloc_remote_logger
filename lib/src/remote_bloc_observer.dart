@@ -16,13 +16,13 @@ import 'package:uuid/uuid.dart';
 /// and send the state changes to a remote server.
 class RemoteBlocObserver extends BlocObserver {
   RemoteBlocObserver({
-    required String apiKey,
+    required String projectKey,
     String baseUrl = 'http://localhost:8080',
     DirectoryProvider? directoryProvider,
   }) {
     _repository = _Repository(
       sessionId: const Uuid().v4(),
-      apiKey: apiKey,
+      projectKey: projectKey,
       directoryProvider: directoryProvider ?? defaultDirectoryProvider,
       baseUrl: baseUrl,
     );
@@ -110,7 +110,7 @@ class RemoteBlocObserver extends BlocObserver {
 class _Repository {
   _Repository({
     required this.sessionId,
-    required this.apiKey,
+    required this.projectKey,
     required this.directoryProvider,
     required this.baseUrl,
   }) {
@@ -140,7 +140,7 @@ class _Repository {
       final sessionMetadataFile = File(
         path.join(
           directory.path,
-          '$apiKey/$sessionId/sessionMetadata.json',
+          '$projectKey/$sessionId/sessionMetadata.json',
         ),
       );
 
@@ -160,7 +160,7 @@ class _Repository {
   }
 
   final String sessionId;
-  final String apiKey;
+  final String projectKey;
   final DirectoryProvider directoryProvider;
   final String baseUrl;
 
@@ -203,7 +203,7 @@ class _Repository {
       final blocMetadataFile = await File(
         path.join(
           directory.path,
-          '$apiKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
+          '$projectKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
         ),
       ).create(recursive: true);
 
@@ -225,7 +225,7 @@ class _Repository {
       final blocMetadataFile = await File(
         path.join(
           directory.path,
-          '$apiKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
+          '$projectKey/$sessionId/$blocName/$blocHashCode/blocMetadata.json',
         ),
       ).create(recursive: true);
 
@@ -251,7 +251,7 @@ class _Repository {
     final file = File(
       path.join(
         directory.path,
-        '$apiKey/$sessionId/$blocName/$blocHashCode/states.csv',
+        '$projectKey/$sessionId/$blocName/$blocHashCode/states.csv',
       ),
     );
 
@@ -281,7 +281,7 @@ class _Repository {
     final file = File(
       path.join(
         directory.path,
-        '$apiKey/$sessionId/$blocName/$blocHashCode/events.csv',
+        '$projectKey/$sessionId/$blocName/$blocHashCode/events.csv',
       ),
     );
 
@@ -312,7 +312,7 @@ class _Repository {
     final file = File(
       path.join(
         directory.path,
-        '$apiKey/$sessionId/$blocName/$blocHashCode/errors.csv',
+        '$projectKey/$sessionId/$blocName/$blocHashCode/errors.csv',
       ),
     );
 
@@ -338,7 +338,7 @@ class _Repository {
       return;
     }
 
-    final apiKeyDirectory = Directory(path.join(directory.path, apiKey));
+    final apiKeyDirectory = Directory(path.join(directory.path, projectKey));
     if (!apiKeyDirectory.existsSync()) {
       print("Directory $directory doesn't exist");
       return;
@@ -375,7 +375,7 @@ class _Repository {
         options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': 'Bearer $apiKey',
+            'Authorization': 'Bearer $projectKey',
           },
         ),
         data: formData,
