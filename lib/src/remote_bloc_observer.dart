@@ -208,7 +208,6 @@ class _Repository {
       ).create(recursive: true);
 
       final blocMetadata = BlocMetadata(
-        id: const Uuid().v4(),
         createdDate: change.timestamp,
         closedDate: null,
       );
@@ -236,7 +235,6 @@ class _Repository {
       final blocMetadata = BlocMetadata.fromJson(blocMetadataJson);
 
       final updatedBlocMetadata = BlocMetadata(
-        id: blocMetadata.id,
         createdDate: blocMetadata.createdDate,
         closedDate: change.timestamp,
       );
@@ -568,26 +566,22 @@ class SessionMetadata {
 
 class BlocMetadata {
   BlocMetadata({
-    required this.id,
     required this.createdDate,
     required this.closedDate,
   });
 
   factory BlocMetadata.fromJson(Map<String, dynamic> json) {
     return BlocMetadata(
-      id: json['id'] as String,
       createdDate: DateTime.tryParse(json['createdDate'] as String),
       closedDate: DateTime.tryParse(json['closedDate'] as String),
     );
   }
 
-  final String id;
   final DateTime? createdDate;
   final DateTime? closedDate;
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'createdDate': createdDate?.toUtc().toIso8601String() ?? '',
       'closedDate': closedDate?.toUtc().toIso8601String() ?? '',
     };
