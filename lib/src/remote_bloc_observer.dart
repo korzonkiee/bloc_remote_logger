@@ -372,10 +372,12 @@ class _Repository {
       // ignore: inference_failure_on_function_invocation
       final response = await Dio().put(
         '$baseUrl/files',
+        queryParameters: {
+          'projectKey': projectKey,
+        },
         options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': 'Bearer $projectKey',
           },
         ),
         data: formData,
