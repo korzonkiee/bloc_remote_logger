@@ -65,13 +65,19 @@ void main() {
 }
 
 /// Event being processed by [CounterBloc].
-abstract class CounterEvent {}
+abstract class CounterEvent extends Equatable {}
 
 /// Notifies bloc to increment state.
-class CounterIncrementPressed extends CounterEvent {}
+class CounterIncrementPressed extends CounterEvent {
+  @override
+  List<Object?> get props => [];
+}
 
 /// Notifies bloc to decrement state.
-class CounterDecrementPressed extends CounterEvent {}
+class CounterDecrementPressed extends CounterEvent {
+  @override
+  List<Object?> get props => [];
+}
 
 /// {@template counter_bloc}
 /// A simple [Bloc] that manages an `int` as its state.
