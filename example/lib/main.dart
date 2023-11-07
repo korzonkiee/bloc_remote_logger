@@ -101,11 +101,21 @@ class CounterView extends StatelessWidget {
   }
 }
 
-abstract class CounterEvent {}
+abstract class CounterEvent extends Equatable {}
 
-class CounterIncrementPressed extends CounterEvent {}
+class CounterIncrementPressed extends CounterEvent {
+  CounterIncrementPressed();
 
-class CounterDecrementPressed extends CounterEvent {}
+  @override
+  List<Object?> get props => [];
+}
+
+class CounterDecrementPressed extends CounterEvent {
+  CounterDecrementPressed();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class CounterState extends Equatable {
   const CounterState({this.counter = 0});
