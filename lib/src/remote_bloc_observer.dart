@@ -411,10 +411,12 @@ class _Change {
 
   String toCSV() {
     final timestamp = this.timestamp.toUtc().toIso8601String();
+    final type = nextState.runtimeType.toString();
     final contentChange = base64.encode(utf8.encode(diff()));
 
     return [
       timestamp,
+      type,
       contentChange,
     ].join(',');
   }
@@ -435,6 +437,7 @@ class _Change {
       'prevState': prevState,
       'nextState': nextState,
       'timestamp': timestamp.toIso8601String(),
+      'type': nextState.runtimeType.toString(),
     };
   }
 
@@ -459,10 +462,12 @@ class _Event {
 
   String toCSV() {
     final timestamp = this.timestamp.toUtc().toIso8601String();
+    final type = event.runtimeType.toString();
     final content = base64.encode(utf8.encode(event.toString()));
 
     return [
       timestamp,
+      type,
       content,
     ].join(',');
   }
@@ -473,6 +478,7 @@ class _Event {
       'blocHashCode': blocHashCode,
       'timestamp': timestamp.toIso8601String(),
       'event': event.toString(),
+      'type': event.runtimeType.toString(),
     };
   }
 
@@ -499,11 +505,13 @@ class _Error {
 
   String toCSV() {
     final timestamp = this.timestamp.toUtc().toIso8601String();
+    final type = error.runtimeType.toString();
     final errorContent = base64.encode(utf8.encode(error.toString()));
     final errorStackTrace = base64.encode(utf8.encode(stackTrace.toString()));
 
     return [
       timestamp,
+      type,
       errorContent,
       errorStackTrace,
     ].join(',');
@@ -514,6 +522,7 @@ class _Error {
       'blocName': blocName,
       'blocHashCode': blocHashCode,
       'timestamp': timestamp.toIso8601String(),
+      'type': error.runtimeType.toString(),
       'error': error.toString(),
       'stackTrace': stackTrace.toString(),
     };
