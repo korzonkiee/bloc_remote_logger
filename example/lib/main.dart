@@ -8,8 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = RemoteBlocObserver(
-    projectKey:
-        '121d8c85c5fdcb86e579eddb9ee82d07858fd7b80385060075dc28d759cb3399',
+    projectKey: '<project-key>',
   );
   runApp(const App());
 }
