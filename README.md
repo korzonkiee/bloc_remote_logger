@@ -61,5 +61,5 @@
     }
     ```
 9. Restart the app and generate some events, state or errors.
-10. Logs will be uploaded on the app launch.
-11. Use [Bloc Remote Logger](https://korzonkiee.github.io/) website to browse thru logs.
+10. Logs are be uploaded on the next app launch. In the future they may be stream in the real-time.
+11. Use [Bloc Remote Logger](https://korzonkiee.github.io/) website to browse through logs.
