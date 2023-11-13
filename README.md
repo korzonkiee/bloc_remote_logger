@@ -21,7 +21,7 @@
     );
     ```
 
-    if you already have a custom instance of BlocObserver assigned, let's call it `AppBlocObserver`, then you can extend `RemoteBlocOBserver` instead of `BlocObserver`. Make sure to override `onCreate`, `onChange`, `onEvent`, `onError` and `onClose` and call `super.method()` in each override.
+    if you already have a custom instance of BlocObserver assigned, let's call it `AppBlocObserver`, then you can extend `RemoteBlocObserver` instead of `BlocObserver`. Make sure to override `onCreate`, `onChange`, `onEvent`, `onError` and `onClose` and call `super.method()` in each override.
 
     ```dart
     class AppBlocObserver extends RemoteBlocObserver {
