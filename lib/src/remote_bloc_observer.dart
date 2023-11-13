@@ -17,7 +17,7 @@ import 'package:uuid/uuid.dart';
 class RemoteBlocObserver extends BlocObserver {
   RemoteBlocObserver({
     required String projectKey,
-    String baseUrl = 'http://localhost:8080',
+    String baseUrl = 'https://bloc-remote-logger.ngrok.app',
     DirectoryProvider? directoryProvider,
   }) {
     _repository = _Repository(

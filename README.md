@@ -3,7 +3,7 @@
 ## Getting started
 
 1. Request login credentials from @korzonkiee.
-2. Sign in to the [Bloc Remote Logger](https://korzonkiee.github.io/) website.
+2. Sign in to the [Bloc Remote Logs Viewer](https://korzonkiee.github.io/) website.
 3. Tap "Add project" button.
 4. Enter project's name, e.g. "My application".
 5. Tap "Copy project key" button.
@@ -62,4 +62,4 @@
     ```
 9. Restart the app and generate some events, state or errors.
 10. Logs are be uploaded on the next app launch. In the future they may be stream in the real-time.
-11. Use [Bloc Remote Logger](https://korzonkiee.github.io/) website to browse through logs.
+11. Use [Bloc Remote Logs Viewer](https://korzonkiee.github.io/) website to browse through logs.
