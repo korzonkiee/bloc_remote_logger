@@ -21,7 +21,7 @@
     );
     ```
 
-    if you already have a custom instance of BlocObserver assigned, let's call it `AppBlocObserver`, then you can extend `RemoteBlocObserver` instead of `BlocObserver`. Make sure to override `onCreate`, `onChange`, `onEvent`, `onError` and `onClose` and call `super.method()` in each override.
+    if you already have a custom instance of BlocObserver assigned, let's call it `AppBlocObserver`, then you can extend `RemoteBlocObserver` instead of `BlocObserver`. Make sure to override `onCreate`, `onChange`, `onEvent`, `onError` and `onClose` and call `super.method()` in each method.
 
     ```dart
     class AppBlocObserver extends RemoteBlocObserver {
@@ -61,5 +61,5 @@
     }
     ```
 9. Restart the app and generate some events, state or errors.
-10. Logs are be uploaded on the next app launch. In the future they may be stream in the real-time.
+10. Logs will be uploaded on the next app launch. In the future they may be streamed in the real-time.
 11. Use [Bloc Remote Logs Viewer](https://korzonkiee.github.io/) website to browse through logs.
